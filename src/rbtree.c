@@ -3,19 +3,20 @@
 #include <stdlib.h>
 
 rbtree *new_rbtree(void) {
+  printf("init start");
   rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
   // TODO: initialize struct if needed
-  p->nil->color = RBTREE_BLACK;
+  node_t *nilNode = (node_t *)calloc(1, sizeof(node_t));
+  nilNode->color = RBTREE_BLACK;
 
-  p->root->color = RBTREE_BLACK;
-  p->root->parent = p->nil;
-  p->root->right = p->nil;
-  p->root->left = p->nil;
-
+  p->nil = nilNode;
+  p->root = nilNode;
+  printf("init end");
   return p;
 }
 
 node_t *rbtree_rotate(rbtree *t, node_t *x, const int d){
+  printf("rotate start");
   node_t *y;
   
   if (d == 0){
@@ -65,51 +66,12 @@ node_t *rbtree_rotate(rbtree *t, node_t *x, const int d){
     y->right = x;
     x->parent = y;
   }
-
-  return t->root;
-}
-
-node_t *rbtree_insert(rbtree *t, const key_t key) {
-  // TODO: implement insert
-  node_t *z = (node_t *)calloc(1, sizeof(node_t));
-  z->color = RBTREE_RED;
-  z->key = key;
-
-  node_t *y = t->nil;
-  node_t *x = t->root;
-
-  while(x != t->nil){
-    y = x;
-    if(key < x->key){
-      x = x->left;
-    }
-    else{
-      x = x->right;
-    }
-  }
-
-  z->parent = y;
-  if (y == t->nil){
-    t->root = z;
-  }
-  else{
-    if(z->key < y->key){
-      y->left = z;
-    }
-    else{
-      y->right = z;
-    }
-  }
-
-  z->left = t->nil;
-  z->right = t->nil;
-  z->color = RBTREE_RED;
-
-  rbtree_insert_fixup(t, z);
+  printf("rotate end");
   return t->root;
 }
 
 node_t *rbtree_insert_fixup(rbtree *t, node_t *z){
+  printf("fixup start");
   node_t *y;
 
   while(z->parent->color == RBTREE_RED){
@@ -148,12 +110,56 @@ node_t *rbtree_insert_fixup(rbtree *t, node_t *z){
 
         z->parent->color = RBTREE_BLACK;
         z->parent->parent = RBTREE_RED;
-        rbtree_rotate(t, z, 0);
+        rbtree_rotate(t, z->parent->parent, 0);
       }
     }
   }
 
   t->root->color = RBTREE_BLACK;
+  printf("fixup end");
+  return t->root;
+}
+
+node_t *rbtree_insert(rbtree *t, const key_t key) {
+  printf("insert start");
+  // TODO: implement insert
+  node_t *z = (node_t *)calloc(1, sizeof(node_t));
+  z->color = RBTREE_RED;
+  z->key = key;
+
+  node_t *y = t->nil;
+  node_t *x = t->root;
+
+  while(x != t->nil){
+    y = x;
+    if(key < x->key){
+      x = x->left;
+    }
+    else{
+      x = x->right;
+    }
+  }
+
+  z->parent = y;
+  if (y == t->nil){
+    t->root = z;
+  }
+  else{
+    if(z->key < y->key){
+      y->left = z;
+    }
+    else{
+      y->right = z;
+    }
+  }
+
+  z->left = t->nil;
+  z->right = t->nil;
+  z->color = RBTREE_RED;
+
+  rbtree_insert_fixup(t, z);
+
+  printf("insert end");
   return t->root;
 }
 

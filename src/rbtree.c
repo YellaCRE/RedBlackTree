@@ -17,6 +17,68 @@ rbtree *new_rbtree(void) {
   return p;
 }
 
+// void delete_rbtree(rbtree *t) {
+//   // TODO: reclaim the tree nodes's memory
+//   node_t *y;
+//   node_t *z = t->root;
+
+//   while (z != t->nil){
+//     if (z->left != t->nil){
+//       z = z->left;
+//     }
+//     else if (z->right != t->nil){
+//       z = z->right;
+//     }
+//     else{
+//       y = z->parent;
+//       free(z);
+//       z = NULL;
+//       z = y;
+//     }
+//   }
+  
+//   free(t->nil);
+//   free(t);
+// }
+
+void free_node(rbtree *t, node_t *x) {
+  // 후위 순회 방식으로 RB Tree 내의 노드 메모리 반환
+  if (x->left != t->nil) 
+    free_node(t, x->left);
+  if (x->right != t->nil)
+    free_node(t, x->right);
+  free(x);
+  x = NULL;
+}
+
+void delete_rbtree(rbtree *t) {
+  // TODO: reclaim the tree nodes's memory
+  if (t->root != t->nil)
+    free_node(t, t->root);
+  free(t->nil);
+  free(t);
+}
+
+node_t *rbtree_find(const rbtree *t, const key_t key) {
+  // TODO: implement find
+  node_t *z = t->root;
+  while (z->key != key){
+    if (z == t->nil){
+      return NULL;
+    }
+
+    if (z->key < key){
+      z = z->right;
+    }
+    else{
+      z = z->left;
+    }
+  }
+
+  return z;
+}
+
+
 void left_rotate(rbtree *t, node_t *x){
   // printf("left rotate start\n");
   node_t *y;
@@ -183,16 +245,6 @@ void rbtree_transplant(rbtree *t, node_t *u, node_t *v){
   v->parent = u->parent;
 }
 
-void delete_rbtree(rbtree *t) {
-  // TODO: reclaim the tree nodes's memory
-  free(t);
-}
-
-node_t *rbtree_find(const rbtree *t, const key_t key) {
-  // TODO: implement find
-  return t->root;
-}
-
 node_t *rbtree_min(const rbtree *t) {
   // TODO: implement find
   node_t *x = t->root;
@@ -224,29 +276,26 @@ void rbtree_delete_fixup(rbtree *t, node_t *x){
   while (x != t->root && x->color == RBTREE_BLACK){
     if (x == x->parent->left){
       w = x->parent->right;
-      
       // x의 형제 w가 RED인 경우
-      if (w->color == RBTREE_RED){  
+      if (w->color == RBTREE_RED){
         w->color = RBTREE_BLACK;
         x->parent->color = RBTREE_RED;  // 형제/부모 색 바꾸기
         left_rotate(t, x->parent);  // 바꾸면 회전
         w = x->parent->right;
       }
-      
       // x의 형제 w가 BLACK이고 w의 두 자식이 모두 BLACK인 경우
       if (w->left->color == RBTREE_BLACK && w->right->color == RBTREE_BLACK){
         w->color = RBTREE_RED;
         x = x->parent;
       }  // 형제의 자식이 전부 블랙이 아닐 때까지 올라간다.
-
-      // x의 형제 w가 BLACK이고 w의 왼쪽이 RED, 오른쪽이 BLACK일 때
-      else {
+      else { // x의 형제 w가 BLACK이고 w의 왼쪽이 RED, 오른쪽이 BLACK일 때
         if (w->right->color == RBTREE_BLACK){
           w->left->color = RBTREE_BLACK;
           w->color = RBTREE_RED;  // 부모/자식 색 바꾸기
           right_rotate(t, w);  // 바꾸면 회전
           w = x->parent->right;
         }
+        
         // x의 형제 w가 BLACK이고 w의 오른쪽이 RED일 때
         w->color = x->parent->color;
         x->parent->color = RBTREE_BLACK;
@@ -255,6 +304,7 @@ void rbtree_delete_fixup(rbtree *t, node_t *x){
         x = t->root;
       }
     }
+
     else{
       w = x->parent->left;
       // x의 형제 w가 RED인 경우
@@ -286,6 +336,7 @@ void rbtree_delete_fixup(rbtree *t, node_t *x){
       }
     }
   }
+  x->color = RBTREE_BLACK;
 }
 
 int rbtree_erase(rbtree *t, node_t *z) {
@@ -294,7 +345,6 @@ int rbtree_erase(rbtree *t, node_t *z) {
   color_t original;
   y = z;  // y는 삭제할 노드
   original = y->color;
-
   if (z->left == t->nil){  // 자식이 둘 다 없거나 왼쪽이 없을 때
     x = z->right;  // 지워지는 노드의 오른쪽
     rbtree_transplant(t, z, z->right);
@@ -318,67 +368,39 @@ int rbtree_erase(rbtree *t, node_t *z) {
       y->right = z->right;
       y->right->parent = y;
     }
+    rbtree_transplant(t, z, y);  // y->parent = z->parent
+    y->left = z->left; // y와 z를 하나로 만든다
+    y->left->parent = y;
+    y->color = z->color;
   }
-  rbtree_transplant(t, z, y);  // y->parent = z->parent
-  y->left = z->left; // y와 z를 하나로 만든다
-  y->left->parent = y;
-  y->color = z->color;
-  
+
   if (original == RBTREE_BLACK){
     rbtree_delete_fixup(t, x);  // x는 이동하는 값의 자식
   }
   return 0;
 }
 
-int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
-  // TODO: implement to_array
-  return 0;
+void inorder(const rbtree *t, node_t *now, key_t *arr, size_t n, size_t *count){
+  if (now != t->nil)
+    inorder(t, now->left, arr, n, count);
+  else
+    return;  // now가 트리 밖이면 return
+
+  // 왼쪽으로 쭉 가고 범위를 벗어나면 기록
+  if (*count < n)
+    arr[(*count)++] = now->key;  // 중위 순회는 가운데서 기록을 한다
+  else
+    return;
+  // 한 번 오른쪽으로 가고 다시 왼쪽으로 쭉 간다
+  inorder(t, now->right, arr, n, count);
 }
 
-// test
-int main(){
-  printf("test start\n\n");
-  
-  //insert
-  rbtree *t = new_rbtree();
-  node_t *i1 = rbtree_insert(t, 1024);
-  node_t *i2 = rbtree_insert(t, 512);
-  node_t *i3 = rbtree_insert(t, 256); 
-  node_t *i4 = rbtree_insert(t, 128);
-  node_t *i5 = rbtree_insert(t, 64);
-  node_t *i6 = rbtree_insert(t, 32);
-  node_t *i7 = rbtree_insert(t, 16);
-  node_t *i8 = rbtree_insert(t, 8);
-  
-  // check tree
-  printf("root의 값은 %d \n\n", t->root->key);
-
-  printf("root->left의 값은 %d \n", t->root->left->key);
-  printf("left->left의 값은 %d \n", t->root->left->left->key);
-  printf("left->right의 값은 %d \n\n", t->root->left->right->key);
-
-  printf("root->right의 값은 %d \n", t->root->right->key);
-  printf("right->left의 값은 %d \n", t->root->right->left->key);
-  printf("right->right의 값은 %d \n\n", t->root->right->right->key);
-
-  // min max
-  printf("min의 값은 %d \n", rbtree_min(t)->key);
-  printf("max의 값은 %d \n\n", rbtree_max(t)->key);
-
-  //delete
-  rbtree_erase(t, t->root->left);
-  
-  // check tree
-  printf("root의 값은 %d \n\n", t->root->key);
-
-  printf("root->left의 값은 %d \n", t->root->left->key);
-  printf("left->left의 값은 %d \n", t->root->left->left->key);
-  printf("left->right의 값은 %d \n\n", t->root->left->right->key);
-
-  printf("root->right의 값은 %d \n", t->root->right->key);
-  printf("right->left의 값은 %d \n", t->root->right->left->key);
-  printf("right->right의 값은 %d \n\n", t->root->right->right->key);
-
-  printf("test end\n");
+int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
+  // TODO: implement to_array
+  if (t->root == t->nil) {
+    return 0;
+  }
+  size_t cnt = 0;  // 전역변수 선언
+  inorder(t, t->root, arr, n, &cnt); 
   return 0;
 }

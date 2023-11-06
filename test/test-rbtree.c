@@ -41,15 +41,12 @@ void test_insert_single(const key_t key) {
 void test_find_single(const key_t key, const key_t wrong_key) {
   rbtree *t = new_rbtree();
   node_t *p = rbtree_insert(t, key);
-
   node_t *q = rbtree_find(t, key);
   assert(q != NULL);
   assert(q->key == key);
   assert(q == p);
-
   q = rbtree_find(t, wrong_key);
   assert(q == NULL);
-
   delete_rbtree(t);
 }
 
@@ -60,14 +57,12 @@ void test_erase_root(const key_t key) {
   assert(p != NULL);
   assert(t->root == p);
   assert(p->key == key);
-
   rbtree_erase(t, p);
 #ifdef SENTINEL
   assert(t->root == t->nil);
 #else
   assert(t->root == NULL);
 #endif
-
   delete_rbtree(t);
 }
 
@@ -102,28 +97,26 @@ void test_minmax(key_t *arr, const size_t n) {
 #ifdef SENTINEL
   assert(t->root != t->nil);
 #endif
-
   qsort((void *)arr, n, sizeof(key_t), comp);
   node_t *p = rbtree_min(t);
   assert(p != NULL);
   assert(p->key == arr[0]);
-
+  
   node_t *q = rbtree_max(t);
   assert(q != NULL);
   assert(q->key == arr[n - 1]);
-
+  
   rbtree_erase(t, p);
   p = rbtree_min(t);
   assert(p != NULL);
   assert(p->key == arr[1]);
-
+  
   if (n >= 2) {
     rbtree_erase(t, q);
     q = rbtree_max(t);
     assert(q != NULL);
     assert(q->key == arr[n - 2]);
   }
-
   delete_rbtree(t);
 }
 

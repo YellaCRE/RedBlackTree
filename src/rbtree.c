@@ -1,8 +1,5 @@
 #include "rbtree.h"
-
 #include <stdlib.h>
-
-#include <stdio.h>  // test
 
 rbtree *new_rbtree(void) {
   // printf("init start\n");
@@ -16,30 +13,6 @@ rbtree *new_rbtree(void) {
   // printf("init end\n");
   return p;
 }
-
-// void delete_rbtree(rbtree *t) {
-//   // TODO: reclaim the tree nodes's memory
-//   node_t *y;
-//   node_t *z = t->root;
-
-//   while (z != t->nil){
-//     if (z->left != t->nil){
-//       z = z->left;
-//     }
-//     else if (z->right != t->nil){
-//       z = z->right;
-//     }
-//     else{
-//       y = z->parent;
-//       free(z);
-//       z = NULL;
-//       z = y;
-//     }
-//   }
-  
-//   free(t->nil);
-//   free(t);
-// }
 
 void free_node(rbtree *t, node_t *x) {
   // 후위 순회 방식으로 RB Tree 내의 노드 메모리 반환
@@ -288,7 +261,8 @@ void rbtree_delete_fixup(rbtree *t, node_t *x){
         w->color = RBTREE_RED;
         x = x->parent;
       }  // 형제의 자식이 전부 블랙이 아닐 때까지 올라간다.
-      else { // x의 형제 w가 BLACK이고 w의 왼쪽이 RED, 오른쪽이 BLACK일 때
+      else { 
+        // x의 형제 w가 BLACK이고 w의 왼쪽이 RED, 오른쪽이 BLACK일 때
         if (w->right->color == RBTREE_BLACK){
           w->left->color = RBTREE_BLACK;
           w->color = RBTREE_RED;  // 부모/자식 색 바꾸기
@@ -371,7 +345,7 @@ int rbtree_erase(rbtree *t, node_t *z) {
     rbtree_transplant(t, z, y);  // y->parent = z->parent
     y->left = z->left; // y와 z를 하나로 만든다
     y->left->parent = y;
-    y->color = z->color;
+    y->color = z->color; // z의 색을 y가 계승
   }
 
   if (original == RBTREE_BLACK){

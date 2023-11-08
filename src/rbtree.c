@@ -371,9 +371,6 @@ void inorder(const rbtree *t, node_t *now, key_t *arr, size_t n, size_t *count){
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   // TODO: implement to_array
-  if (t->root == t->nil) {
-    return 0;
-  }
   size_t cnt = 0;  // 전역변수 선언
   inorder(t, t->root, arr, n, &cnt); 
   return 0;
